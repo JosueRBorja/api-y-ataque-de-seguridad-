@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Response 
 from sqlmodel import SQLModel
 from typing import Optional
 
@@ -24,6 +24,13 @@ contador_id = max((usua["id"] for usua in bd_usuarios.values()), default=0) + 1
 def inicio():
     return {"mensaje": "API creada por Sir_Josue"}
 
+@app.post("/login")
+def login(username: str, password: str, respuesta: Response):
+    for usua in bd_usuarios.values():
+        if usua["username"] == username and usua["password"] == password:
+            return {"mensaje": "Login exitoso"}
+    respuesta.status_code = 401
+    return {"mensaje": "Credenciales inválidas"}
 
 #  POST /users  Crear usuario
 @app.post("/users", status_code=201)
@@ -50,7 +57,7 @@ def obtener_usuario(id_usuario: int, respuesta: Response):
         respuesta.status_code = 404
         return {"error": "No encontrado"}
     return usua
-#  PUT /users/{id} — Actualizar excepto password
+#  PUT /users/{id} Actualizar excepto password
 @app.put("/users/{id_usuario}")
 def actualizar_usuario(id_usuario: int, username: Optional[str] = None, email: Optional[str] = None):
     usua = bd_usuarios.get(id_usuario)
@@ -66,12 +73,3 @@ def eliminar_usuario(id_usuario: int):
         del bd_usuarios[id_usuario]
         return {"mensaje": "Eliminado"}
     return {"error": "No existe"}
-
-# POST /login — Autenticar 
-@app.post("/login")
-def login(nombre_usuario: str, contrase: str, respuesta: Response):
-    for usua in bd_usuarios.values():
-        if usua["username"] == nombre_usuario and usua["password"] == contrase:
-            return {"mensaje": "Login exitoso"}
-    respuesta.status_code = 401
-    return {"mensaje": "Login fallido"}

